@@ -1,0 +1,348 @@
+#! /usr/bin/python3
+
+# wordle-solver
+# Solve a Wordle puzzle
+# Copyright (c) 2022  David Purton
+# 
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import argparse
+import operator
+import random
+import re
+import signal
+import sys
+
+
+#
+# filter_word_list(): filter a word list using the supplied regular expression
+#   pattern:   regular expression to filter on
+#   word_list: list of words to filter
+#
+#   returns:
+#     filtered_word_list: word_list filtered using pattern
+#
+def filter_word_list(pattern, word_list):
+    filtered_word_list = []
+    for word in word_list:
+        if re.match(pattern, word):
+            filtered_word_list.append(word)
+    return filtered_word_list
+#
+# end filter_word_list()
+#
+
+
+#
+# get_random_word(): get a random word from a word list
+#   guess_count: current guess number (0 based)
+#   word_list:   list of words to select from
+#
+#   returns:
+#     guess: a guess selected from word_list
+#
+def get_random_word(guess_count, word_list, DEBUG = False):
+    # for first two guesses maximise non-repeating consonants with up to two vowels
+    if guess_count < 2:
+        # filter word list to words with only up to two vowels
+        if guess_count == 0:
+            # filter to words containing a, e or o on first guess
+            filter_pattern = "^[^aeiou]*[aeo][^aeiou]*[aeo]?[^aeiou]*$"
+        else:
+            filter_pattern = "^[^aeiou]*[aeiou][^aeiou]*[aeiou]?[^aeiou]*$"
+        vowel_word_list = filter_word_list(filter_pattern, word_list)
+        if DEBUG:
+            print("DEBUG: Guessing from " + str(len(vowel_word_list)) + " words", end=" ")
+            if guess_count == 0:
+                print("after filtering for a, e and o")
+            else:
+                print("after filtering for vowels")
+        if vowel_word_list:
+            # filter word list to contain unique consonants
+            if guess_count == 0:
+                # use ten most common consonants for first guess
+                filter_pattern = r"^(?![aeosrltndcphy]*([aeosrltndcphy])[aeosrltndcphy]*\1)[aeosrltndcphy]+$"
+            else:
+                filter_pattern = r"^(?!.*(.).*\1)[a-z]+$"
+            consonant_word_list = filter_word_list(filter_pattern, vowel_word_list)
+            if DEBUG:
+                print("DEBUG: Guessing from " + str(len(consonant_word_list)) + " words", end=" ")
+                if guess_count == 0:
+                    print("after filtering for unique common consonants")
+                else:
+                    print("after filtering for unique consonants")
+            if consonant_word_list:
+                return random.choice(consonant_word_list).strip()
+            else:
+                return random.choice(vowel_word_list).strip()
+    return random.choice(word_list).strip()
+#
+# end get_random_word()
+#
+
+
+#
+# guess a word and filter the word list based on feedback
+#   guess_count: current guess number (0 based)
+#   word_list:   list of words to select from and filter
+#   DEBUG:       print debugging information
+#   debug_words: seed guesses with up to 6 words
+#
+#   returns:
+#     word_list:      Filtered word list after feedback given
+#     guess_feedback: The feedback given for this guess
+#     word_guessed:   True if feedback is given as "ggggg"
+#
+def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
+    if DEBUG:
+        if guess_count == 0:
+            print("DEBUG: Words in initial list: " + str(len(word_list)))
+
+    # guess a random word from the current list
+    guess = get_random_word(guess_count, word_list, DEBUG)
+
+    # seed guesses (useful for debugging)
+    if len(debug_words) > guess_count:
+        if debug_words[guess_count] != "":
+            if len(debug_words[guess_count]) != 5:
+                if DEBUG:
+                    print("DEBUG: Seeded guess '" + debug_words[guess_count] +
+                            "' is not a five letter word; ignoring\n")
+            else:
+                if DEBUG:
+                    print("DEBUG: Using seeded guess '" + debug_words[guess_count] + "'")
+                guess = debug_words[guess_count]
+    if DEBUG:
+        print("")
+
+    # get guess feedback
+    print("Guess {0}: {1}".format(guess_count + 1, guess))
+    guess_feedback = input("  Guess feedback: ")
+
+    # ensure valid guess feedback
+    while not re.match("^[gxy]{5}$", guess_feedback):
+        print("    Invalid feedback format. Try again.")
+        guess_feedback = input("  Guess feedback: ")
+
+    # return for a successful guess
+    if guess_feedback == "ggggg":
+        global word_guessed
+        return [guess], guess_feedback, True
+
+
+    # filter out words containing letters which are not present at each position
+    # char with feedback = "x" can not appear in any position unless there is a "y" elsewhere
+    letters_not_present = [""] * 5
+    for i, feedback in enumerate(guess_feedback):
+        if feedback == "x":
+            # check for same char with "y" feedback earlier in guess
+            y_feedback = False
+            for char_pos in [m.start() for m in re.finditer(guess[i], guess)]:
+                if char_pos != i:
+                    # if same char with "y" feedback found elsewhere then just remove
+                    # it from current position
+                    # set y_feedback = True as the char will still appear somewhere
+                    if guess_feedback[char_pos] == "y":
+                        # only need to add char once
+                        if letters_not_present[i].find(guess[i]) == -1:
+                            letters_not_present[i] += guess[i]
+                        y_feedback = True
+            # if no same char with "y" feedback elsewhere in guess
+            # then can assume char is not present anywhere
+            if not y_feedback:
+                for j in range(5):
+                    # only need to add char once
+                    if letters_not_present[j].find(guess[i]) == -1:
+                        letters_not_present[j] += guess[i]
+
+    # char with feedback = "y" can't appear at that position
+    for i, feedback in enumerate(guess_feedback):
+        if feedback == 'y':
+            # only need to add char once
+            if letters_not_present[i].find(guess[i]) == -1:
+                letters_not_present[i] += guess[i]
+
+    # invert characters to test for a positive match
+    for i in range(5):
+        letters_not_present[i] = "[^" + letters_not_present[i] + "]"
+
+    # char with feedback = "g" must appear at that position
+    for i, feedback in enumerate(guess_feedback):
+        if feedback == 'g':
+            letters_not_present[i] = guess[i]
+
+    # filter word list
+    filter_pattern = "".join(letters_not_present)
+    word_list = filter_word_list(filter_pattern, word_list)
+    if DEBUG:
+        print("\nDEBUG: Not present pattern: " + filter_pattern)
+        print("DEBUG: Words left: " + str(len(word_list)))
+
+
+    # char with feedback = "y" must be present
+    # at least as many times is "y" is present in the feedback
+    filter_pattern = ""
+    for i, feedback in enumerate(guess_feedback):
+        if feedback == "y":
+            if filter_pattern.find(guess[i]) == -1:
+                filter_pattern += "(?=.*" + guess[i] + ".*)"
+            else:
+                filter_pattern = filter_pattern.replace(guess[i], guess[i] + ".*" + guess[i], 1)
+
+    # filter word list
+    if filter_pattern != "":
+        word_list = filter_word_list(filter_pattern, word_list)
+        if DEBUG:
+            print("DEBUG: Must be present pattern: " + filter_pattern)
+            print("DEBUG: Words left: " + str(len(word_list)))
+
+
+    # char with feedback = "y" and feedback = "x" must be present
+    # exactly as many times as "y" is present in the feedback
+    char_counts = {}
+    # create dictionary counting "y" and "x" feedback for each letter in guess
+    for i, feedback in enumerate(guess_feedback):
+        char_counts[guess[i]] = list(map(operator.add, char_counts.get(guess[i], [0, 0]),
+                [ int(feedback == "y"), int(feedback == "x") ]))
+    for i, char in enumerate(char_counts):
+        # if letter in guess has both "y" and "x" construct pattern to match words
+        # containing char the number of times "y" appears in the guess
+        if char_counts[char][0] > 0 and char_counts[char][1] > 0:
+            filter_pattern = "^[^" + char + "]*"
+            for j in range(char_counts[char][0]):
+                if j > 0:
+                    filter_pattern += ".*?"
+                filter_pattern += "[" + char + "]"
+            filter_pattern += "[^" + char + "]*$"
+            word_list = filter_word_list(filter_pattern, word_list)
+            if DEBUG:
+                print("DEBUG: Exactly present pattern: " + filter_pattern)
+                print("DEBUG: Words left: " + str(len(word_list)))
+
+    return word_list, guess_feedback, False
+#
+# end guess_word()
+#
+
+
+# 
+# solve_wordle(): solve a Wordle puzzle
+#   DEBUG:       print debugging information
+#   debug_words: seed guesses with up to 6 words
+#
+# returns:
+#   0: solved Wordle
+#   1: could not find a solution
+#
+def solve_wordle(DEBUG = False, debug_words = [], word_fname = "/etc/dictionaries-common/words"):
+    try:
+        word_file = open(word_fname, "r")
+    except:
+        print("\nERROR: Could not open file '" + word_fname + "' containing known words.\n")
+        return 1
+
+    # read in 5 letter lowercase words from supplied word file (excluding Roman numbers)
+    word_list = []
+    for word in word_file:
+        if re.match("^(?![xvicm]{5})[a-z]{5}$", word):
+            word_list.append(word)
+    word_file.close()
+
+    if len(word_list) == 0:
+        print("\nERROR: File '" + word_fname + "' contains no valid 5 letter words.\n")
+        return 1
+
+    banner = [ "Genius", "Magnificent", "Impressive", "Splendid", "Great", "Phew" ]
+    guess_history = ""
+
+    print("\nFor guess feedback, enter 5 characters:")
+    print("    x: letter does not appear in word")
+    print("    y: letter appears in the word but at a different location")
+    print("    g: letter appears in the word at this location\n")
+
+    for guess_count in range(6):
+        word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, DEBUG, debug_words)
+
+        # store guess history using emojis
+        for feedback in guess_feedback[ : : 1 ]:
+            if feedback == 'g':
+                guess_history += "\U0001F7E9" # green square
+            elif feedback == 'y':
+                guess_history += "\U0001F7E8" # yellow square
+            else:
+                guess_history += "\U00002B1C" # white square
+        guess_history += "\n"
+
+        # word guessed
+        if word_guessed:
+            print("\nGuessed word in {0} guesses: {1} ({2}!)\n".format(guess_count + 1,
+                word_list[0], banner[guess_count]))
+            print("Wordle {0}/6*\n".format(guess_count + 1))
+            print(guess_history)
+            return 0
+        
+        # run out of words to choose from
+        if len(word_list) == 0:
+            print("\nSorry, I don't know any more potential words.\n")
+            print("Wordle X/6*\n")
+            print(guess_history)
+            return 1
+
+    # run out of guesses
+    print("\nCould not guess word within 6 guesses.\n")
+    print("Wordle X/6*\n")
+    print(guess_history)
+    return 1
+#
+# end solve_wordle()
+#
+
+
+#
+# signal_handler(): signal handler to gracefully exit on Ctrl+C
+#   sig:   signal number (unused)
+#   frame: execution frame (unused)
+#
+def signal_handler(sig, frame):
+    print("\n")
+    sys.exit(1)
+#
+# end signal_handler()
+#
+
+
+#
+# main
+# exits:
+#   0: success
+#   1: failure
+#
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    parser = argparse.ArgumentParser(description="Solve a Wordle puzzle.")
+    parser.add_argument("-d", "--debug", dest="debug", action='store_true',
+            help="show debug information")
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
+    parser.add_argument("-w", "--words", metavar="fname", dest="word_fname",
+            default="/etc/dictionaries-common/words",
+            help="file containing list of words to guess from")
+    parser.add_argument('guesses', metavar="guess", nargs="*",
+            help="seed the solver with up to 6 guesses")
+    args = parser.parse_args()
+    sys.exit(solve_wordle(args.debug, args.guesses, args.word_fname))
+#
+# end main
+#

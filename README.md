@@ -25,7 +25,7 @@ word must be used in subsequent guesses in the correct position if known.
 ## Usage
 
 ```
-usage: wordle-solver [-h] [-d] [-w fname] [guess ...]
+usage: wordle-solver [-h] [-d] [-p] [-s] [-v] [-w fname] [guess ...]
 
 Solve a Wordle puzzle.
 
@@ -35,6 +35,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -d, --debug           show debug information
+  -p, --practice        do not update statistics
+  -s, --statistics      print statistics
   -v, --version         show program's version number and exit
   -w fname, --words fname
                         file containing list of words to guess from

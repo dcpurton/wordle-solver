@@ -99,7 +99,9 @@ def save_stats(stats):
 #   guess_count:  number of guesses made
 #   word_guessed: true if word was guessed
 #
-def print_stats(stats, guess_count, word_guessed):
+def print_stats(stats = False, guess_count = False, word_guessed = False):
+    if not stats:
+        stats = load_stats()
     print("\033[1m\033[4mStatistics\033[0m\n")
     print("Played:         " + str(stats["Played"]))
     print("Win%:           " + str(int(stats["Win %"])) + "%")
@@ -461,6 +463,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Solve a Wordle puzzle.")
     parser.add_argument("-d", "--debug", dest="debug", action='store_true',
             help="show debug information")
+    parser.add_argument("-s", "--statistics", dest="stats", action='store_true',
+            help="print statistics")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument("-w", "--words", metavar="fname", dest="word_fname",
             default="/etc/dictionaries-common/words",
@@ -468,6 +472,9 @@ if __name__ == "__main__":
     parser.add_argument('guesses', metavar="guess", nargs="*",
             help="seed the solver with up to 6 guesses")
     args = parser.parse_args()
+    if args.stats:
+        print_stats()
+        sys.exit(0)
     sys.exit(solve_wordle(args.debug, args.guesses, args.word_fname))
 #
 # end main

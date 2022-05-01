@@ -372,7 +372,7 @@ def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
 #   0: solved Wordle
 #   1: could not find a solution
 #
-def solve_wordle(DEBUG = False, debug_words = [], word_fname = "/etc/dictionaries-common/words"):
+def solve_wordle(DEBUG = False, practice = False, debug_words = [], word_fname = "/etc/dictionaries-common/words"):
     try:
         word_file = open(word_fname, "r")
     except:
@@ -417,7 +417,8 @@ def solve_wordle(DEBUG = False, debug_words = [], word_fname = "/etc/dictionarie
                 word_list[0], banner[guess_count]))
             print("Wordle {0}/6*\n".format(guess_count + 1))
             print(guess_history)
-            update_stats(guess_count, word_guessed)
+            if not practice:
+                update_stats(guess_count, word_guessed)
             return 0
         
         # run out of words to choose from
@@ -425,14 +426,16 @@ def solve_wordle(DEBUG = False, debug_words = [], word_fname = "/etc/dictionarie
             print("\nSorry, I don't know any more potential words.\n")
             print("Wordle X/6*\n")
             print(guess_history)
-            update_stats(guess_count, word_guessed)
+            if not practice:
+                update_stats(guess_count, word_guessed)
             return 1
 
     # run out of guesses
     print("\nCould not guess word within 6 guesses.\n")
     print("Wordle X/6*\n")
     print(guess_history)
-    update_stats(guess_count, word_guessed)
+    if not practice:
+        update_stats(guess_count, word_guessed)
     return 1
 #
 # end solve_wordle()
@@ -463,6 +466,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Solve a Wordle puzzle.")
     parser.add_argument("-d", "--debug", dest="debug", action='store_true',
             help="show debug information")
+    parser.add_argument("-p", "--practice", dest="practice", action='store_true',
+            help="do not update statistics")
     parser.add_argument("-s", "--statistics", dest="stats", action='store_true',
             help="print statistics")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
@@ -475,7 +480,7 @@ if __name__ == "__main__":
     if args.stats:
         print_stats()
         sys.exit(0)
-    sys.exit(solve_wordle(args.debug, args.guesses, args.word_fname))
+    sys.exit(solve_wordle(args.debug, args.practice, args.guesses, args.word_fname))
 #
 # end main
 #

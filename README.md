@@ -4,9 +4,8 @@ A simple Wordle solver.
 
 ## Method
 
-`wordle-solver` sources five letter words from
-`/etc/dictionaries-common/words` (or another specified file containing one
-word per line) and attempts to solve a
+`wordle-solver` sources five letter words from `/usr/share/dict/words` (or
+another specified file containing one word per line) and attempts to solve a
 [Wordle](https://www.nytimes.com/games/wordle/index.html) puzzle.
 
 The user must give feedback indicating whether each letter guessed does not

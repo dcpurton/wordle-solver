@@ -391,7 +391,7 @@ def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
 #   0: solved Wordle
 #   1: could not find a solution
 #
-def solve_wordle(DEBUG = False, practice = False, debug_words = [], word_fname = "/etc/dictionaries-common/words"):
+def solve_wordle(DEBUG = False, practice = False, debug_words = [], word_fname = "/usr/share/dict/words"):
     try:
         word_file = open(word_fname, "r")
     except:
@@ -491,7 +491,7 @@ if __name__ == "__main__":
             help="print statistics")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument("-w", "--words", metavar="fname", dest="word_fname",
-            default="/etc/dictionaries-common/words",
+            default="/use/share/dict/words",
             help="file containing list of words to guess from")
     parser.add_argument('guesses', metavar="guess", nargs="*",
             help="seed the solver with up to 6 guesses")

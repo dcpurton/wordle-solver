@@ -99,7 +99,10 @@ def save_stats(stats):
 #
 def print_stats(stats = False, guess_count = False, word_guessed = False):
     if not stats:
-        stats = load_stats()
+        try:
+            stats = load_stats()
+        except:
+            return
     print("\033[1m\033[4mStatistics\033[0m\n")
     print("Played:         " + str(stats["Played"]))
     print("Win%:           " + str(int(stats["Win %"])) + "%")
@@ -126,7 +129,10 @@ def print_stats(stats = False, guess_count = False, word_guessed = False):
 #   word_guessed: true if word was guessed
 #
 def update_stats(guess_count, word_guessed):
-    stats = load_stats()
+    try:
+        stats = load_stats()
+    except:
+        return
     stats["Played"] += 1
     if word_guessed:
         stats["Won"] += 1

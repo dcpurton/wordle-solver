@@ -241,7 +241,7 @@ def get_random_word(guess_count, word_list, DEBUG = False):
 
 
 #
-# guess a word and filter the word list based on feedback
+# guess_word(): guess a word and filter the word list based on feedback
 #   guess_count: current guess number (0 based)
 #   word_list:   list of words to select from and filter
 #   DEBUG:       print debugging information

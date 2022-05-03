@@ -118,10 +118,12 @@ def print_stats(stats = False, guess_count = False, word_guessed = False):
         except:
             return
     boldunderline = ""
+    columns = ""
     highlight = ""
     normal = ""
     if has_ansi():
         boldunderline = "\033[1m\033[4m"
+        columns = "\033[38;5;221m"
         highlight = "\033[38;5;34m"
         normal = "\033[0m"
     print(boldunderline + "Statistics" + normal + "\n")
@@ -130,7 +132,7 @@ def print_stats(stats = False, guess_count = False, word_guessed = False):
     print("Current Streak: " + str(stats["Current Streak"]))
     print("Max Streak:     " + str(stats["Max Streak"]))
     print("\n" + boldunderline + "Guess Distribution" + normal + "\n")
-    colours = [""] * 6
+    colours = [columns] * 6
     if word_guessed:
         colours[guess_count] = highlight
     for i, guesses in enumerate(stats["Guess Distribution"]):
@@ -491,12 +493,13 @@ if __name__ == "__main__":
             help="print statistics")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument("-w", "--words", metavar="fname", dest="word_fname",
-            default="/use/share/dict/words",
+            default="/usr/share/dict/words",
             help="file containing list of words to guess from")
     parser.add_argument('guesses', metavar="guess", nargs="*",
             help="seed the solver with up to 6 guesses")
     args = parser.parse_args()
     if args.stats:
+        print()
         print_stats()
         sys.exit(0)
     sys.exit(solve_wordle(args.debug, args.practice, args.guesses, args.word_fname))

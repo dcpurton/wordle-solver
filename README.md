@@ -24,7 +24,7 @@ word must be used in subsequent guesses in the correct position if known.
 ## Usage
 
 ```
-usage: wordle-solver [-h] [-a word] [-d] [-p] [-s] [-v] [-w fname] [guess ...]
+usage: wordle-solver [-h] [-a word] [-d] [-n number] [-p] [-s] [-t] [-v] [-w fname] [guess ...]
 
 Solve a Wordle puzzle.
 
@@ -36,8 +36,11 @@ optional arguments:
   -a word, --answer word
                         auto-solve using supplied five letter word
   -d, --debug           show debug information
+  -n number, --number number
+                        auto-solve specified Wordle
   -p, --practice        do not update statistics
   -s, --statistics      print statistics
+  -t, --today           auto-solve today's Wordle
   -v, --version         show program's version number and exit
   -w fname, --words fname
                         file containing list of words to guess from

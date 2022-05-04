@@ -19,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from datetime import date
 from os import getenv
 from pathlib import Path
 
@@ -30,6 +31,7 @@ import random
 import re
 import signal
 import sys
+import urllib.request
 
 
 #
@@ -467,7 +469,7 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
 #   0: solved Wordle
 #   1: could not find a solution
 #
-def solve_wordle(DEBUG = False, practice = False, answer = False, debug_words = [],
+def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, debug_words = [],
         word_fname = "/usr/share/dict/words"):
     try:
         word_file = open(word_fname, "r")
@@ -517,7 +519,10 @@ def solve_wordle(DEBUG = False, practice = False, answer = False, debug_words = 
         if word_guessed:
             print("\nGuessed word in {0} guesses: {1} ({2}!)\n".format(guess_count + 1,
                 word_list[0], banner[guess_count]))
-            print("Wordle {0}/6*\n".format(guess_count + 1))
+            if number >= 0:
+                print("Wordle {0} {1}/6*\n".format(number, guess_count + 1))
+            else:
+                print("Wordle {0}/6*\n".format(guess_count + 1))
             print(guess_history)
             if not practice:
                 update_stats(guess_count, word_guessed)
@@ -526,7 +531,10 @@ def solve_wordle(DEBUG = False, practice = False, answer = False, debug_words = 
         # run out of words to choose from
         if len(word_list) == 0:
             print("\nSorry, I don't know any more potential words.\n")
-            print("Wordle X/6*\n")
+            if number >= 0:
+                print("Wordle {0} X/6*\n".format(number))
+            else:
+                print("Wordle X/6*\n")
             print(guess_history)
             if not practice:
                 update_stats(guess_count, word_guessed)
@@ -534,13 +542,113 @@ def solve_wordle(DEBUG = False, practice = False, answer = False, debug_words = 
 
     # run out of guesses
     print("\nCould not guess word within 6 guesses.\n")
-    print("Wordle X/6*\n")
+    if number >= 0:
+        print("Wordle {0} X/6*\n".format(number))
+    else:
+        print("Wordle X/6*\n")
     print(guess_history)
     if not practice:
         update_stats(guess_count, word_guessed)
     return 1
 #
 # end solve_wordle()
+#
+
+
+#
+# cache_wordle_list(): Cache downloaded Wordle words
+#
+def cache_wordle_list(wordle_list):
+    try:
+        wordle_list_path = user_data_dir("wordle_list.json")
+        wordle_list_path.parent.mkdir(parents=True, exist_ok=True)
+        wordle_list_path.touch(exist_ok=True)
+        with open(wordle_list_path, "w") as wordle_list_file:
+            json.dump(wordle_list, wordle_list_file, indent=4)
+            wordle_list_file.close()
+    except:
+        print("\nWARNING: Could not cache Wordle list\n")
+#
+# end cache_wordle_list()
+#
+
+
+#
+# download_wordle_list(): Download Wordle words from New York Times website
+#
+#   returns:
+#       wordle_list: list of Wordle words
+#       False:       if an error occurs
+#
+def download_wordle_list():
+    try:
+        # download Wordle list
+        wordle_code_url = "https://www.nytimes.com/games/wordle/main.e17c80f8.js"
+        with urllib.request.urlopen(wordle_code_url) as f:
+            wordle_code = f.read().decode('utf-8')
+            f.close()
+        wordle_var = re.search("mo=\[.*?\]", wordle_code)
+        wordle_list = wordle_var[0][5:len(wordle_var[0])-2].split("\",\"")
+        # cache Wordle list locally
+        cache_wordle_list(wordle_list)
+        return wordle_list
+    except:
+        print("\nERROR: Could not download Wordle list\n")
+        return False
+#
+# end download_wordle_list()
+#
+
+
+#
+# load_wordle_list(): Load cached Wordle words
+#
+#   returns:
+#       wordle_list: list of Wordle words
+#       False:       if an error occurs
+#
+def load_wordle_list():
+    wordle_list_path = user_data_dir("wordle_list.json")
+    try:
+        with open(wordle_list_path, "r") as wordle_list_file:
+            wordle_list = json.load(wordle_list_file)
+            wordle_list_file.close()
+    except:
+        wordle_list = download_wordle_list()
+    return wordle_list
+#
+# end load_wordle_words()
+#
+
+
+#
+# get_wordle(): Get today's or some other Wordle word
+#   number: Wordle number to get (False for today's Wordle)
+#
+#   returns:
+#       wordle: specified Wordle word
+#       False:  if error occurred
+#
+def get_wordle(number = -1):
+    # load Wordle list
+    wordle_list = load_wordle_list()
+
+    if not wordle_list:
+        return False, number
+
+    if number == -1:
+        # get today's Wordle
+        delta = date.today() - date.fromisoformat("2021-06-19")
+        number = delta.days
+        while number >= len(wordle_list):
+            number -= len(wordle_list)
+    elif number < 0 or number >= len(wordle_list):
+        print("\nERROR: Requested Wordle must be between 0 and " + len(wordle_list) - 1 + "\n")
+        return False, number
+
+    return wordle_list[number], number
+#
+# end get_wordle()
 #
 
 
@@ -570,10 +678,14 @@ if __name__ == "__main__":
             default=False, help="auto-solve using supplied five letter word")
     parser.add_argument("-d", "--debug", dest="debug", action='store_true',
             help="show debug information")
+    parser.add_argument("-n", "--number", metavar="number", dest="number",
+            default=-1, type=int, help="auto-solve specified Wordle")
     parser.add_argument("-p", "--practice", dest="practice", action='store_true',
             help="do not update statistics")
     parser.add_argument("-s", "--statistics", dest="stats", action='store_true',
             help="print statistics")
+    parser.add_argument("-t", "--today", dest="today", action='store_true',
+            help="auto-solve today's Wordle")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument("-w", "--words", metavar="fname", dest="word_fname",
             default="/usr/share/dict/words",
@@ -585,7 +697,15 @@ if __name__ == "__main__":
         print()
         print_stats()
         sys.exit(0)
-    sys.exit(solve_wordle(args.debug, args.practice, args.answer, args.guesses, args.word_fname))
+    if args.today:
+        args.answer, args.number = get_wordle()
+        if not args.answer:
+            sys.exit(1)
+    elif args.number >= 0:
+        args.answer, args.number = get_wordle(args.number)
+        if not args.answer:
+            sys.exit(1)
+    sys.exit(solve_wordle(args.debug, args.practice, args.number, args.answer, args.guesses, args.word_fname))
 #
 # end main
 #

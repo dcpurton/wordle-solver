@@ -241,6 +241,76 @@ def get_random_word(guess_count, word_list, DEBUG = False):
 
 
 #
+# show_guess_feedback(): Show guess feedback
+#   guess_feedback = string indicating feedback
+#
+def show_guess_feedback(guess, guess_feedback):
+    bold = ""
+    yellow = ""
+    green = ""
+    grey = ""
+    normal = ""
+    if has_ansi():
+        bold = "\033[1m"
+        yellow = "\033[38;5;221m"
+        green = "\033[38;5;34m"
+        grey = "\033[38;5;244m"
+        normal = "\033[0m"
+    print(bold, end = "")
+    for i, char in enumerate(guess):
+        if guess_feedback[i] == "x":
+            print(grey, end = "")
+        elif guess_feedback[i] == "y":
+            print(yellow, end = "")
+        else:
+            print(green, end = "")
+        print(char, end = "")
+    print(normal)
+#
+# end show_guess_feedback()
+#
+
+
+#
+# get_guess_feedback(): Get guess feedback from user or supplied answer
+#   guess:  word guessed
+#   answer: optional supplied answer
+#
+#   returns:
+#     guess_feedback: a string of 5 characters containing the guess feedback
+#
+def get_guess_feedback(guess, answer = False):
+    guess_feedback = ""
+    if answer:
+        for i, char in enumerate(guess):
+            if answer[i] == char:
+                # char appears at this position in answer
+                guess_feedback += "g"
+            elif answer.find(char) == -1:
+                # char does not appear at all in answer
+                guess_feedback += "x"
+            else:
+                # deal with "y" possibility
+                char_answer_total = answer.count(char)
+                char_guessed_before = guess[:i].count(char)
+                char_guessed_correct_after = 0
+                for char_pos in [m.start() for m in re.finditer(char, guess[i + 1:])]:
+                    if guess[i + 1 + char_pos] == answer[i + 1 + char_pos]:
+                        char_guessed_correct_after += 1
+                if char_guessed_correct_after + char_guessed_before >= char_answer_total:
+                    guess_feedback += "x"
+                else:
+                    guess_feedback += "y"
+        show_guess_feedback(guess, guess_feedback)
+    else:
+        guess_feedback = input("  Guess feedback: ")
+    return guess_feedback
+#
+# end get_guess_feedback()
+#
+
+
+#
 # guess_word(): guess a word and filter the word list based on feedback
 #   guess_count: current guess number (0 based)
 #   word_list:   list of words to select from and filter
@@ -252,7 +322,7 @@ def get_random_word(guess_count, word_list, DEBUG = False):
 #     guess_feedback: The feedback given for this guess
 #     word_guessed:   True if feedback is given as "ggggg"
 #
-def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
+def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_words = []):
     if DEBUG:
         if guess_count == 0:
             print("DEBUG: Words in initial list: " + str(len(word_list)))
@@ -275,8 +345,12 @@ def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
         print("")
 
     # get guess feedback
-    print("Guess {0}: {1}".format(guess_count + 1, guess))
-    guess_feedback = input("  Guess feedback: ")
+    if answer:
+        print("Guess {0}: ".format(guess_count + 1), end = "")
+    else:
+        print("Guess {0}: {1}".format(guess_count + 1, guess))
+    #guess_feedback = input("  Guess feedback: ")
+    guess_feedback = get_guess_feedback(guess, answer)
 
     # ensure valid guess feedback
     while not re.match("^[gxy]{5}$", guess_feedback):
@@ -393,7 +467,8 @@ def guess_word(guess_count, word_list, DEBUG = False, debug_words = []):
 #   0: solved Wordle
 #   1: could not find a solution
 #
-def solve_wordle(DEBUG = False, practice = False, debug_words = [], word_fname = "/usr/share/dict/words"):
+def solve_wordle(DEBUG = False, practice = False, answer = False, debug_words = [],
+        word_fname = "/usr/share/dict/words"):
     try:
         word_file = open(word_fname, "r")
     except:
@@ -414,13 +489,19 @@ def solve_wordle(DEBUG = False, practice = False, debug_words = [], word_fname =
     banner = [ "Genius", "Magnificent", "Impressive", "Splendid", "Great", "Phew" ]
     guess_history = ""
 
-    print("\nFor guess feedback, enter 5 characters:")
-    print("    x: letter does not appear in word")
-    print("    y: letter appears in the word but at a different location")
-    print("    g: letter appears in the word at this location\n")
+    print()
+    if answer:
+        if len(answer) != 5:
+            print("ERROR: supplied answer must be a five letter word.\n")
+            return 1
+    else:
+        print("For guess feedback, enter 5 characters:")
+        print("    x: letter does not appear in word")
+        print("    y: letter appears in the word but at a different location")
+        print("    g: letter appears in the word at this location\n")
 
     for guess_count in range(6):
-        word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, DEBUG, debug_words)
+        word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, answer, DEBUG, debug_words)
 
         # store guess history using emojis
         for feedback in guess_feedback[ : : 1 ]:
@@ -485,6 +566,8 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     parser = argparse.ArgumentParser(description="Solve a Wordle puzzle.")
+    parser.add_argument("-a", "--answer", metavar="word", dest="answer",
+            default=False, help="auto-solve using supplied five letter word")
     parser.add_argument("-d", "--debug", dest="debug", action='store_true',
             help="show debug information")
     parser.add_argument("-p", "--practice", dest="practice", action='store_true',
@@ -502,7 +585,7 @@ if __name__ == "__main__":
         print()
         print_stats()
         sys.exit(0)
-    sys.exit(solve_wordle(args.debug, args.practice, args.guesses, args.word_fname))
+    sys.exit(solve_wordle(args.debug, args.practice, args.answer, args.guesses, args.word_fname))
 #
 # end main
 #

@@ -10,7 +10,9 @@ another specified file containing one word per line) and attempts to solve a
 
 The user must give feedback indicating whether each letter guessed does not
 appear in the word, does appear, but at a different location, or appears at
-the guessed location.
+the guessed location. Alternatively an answer can be supplied to solve
+automatically. It's also possible to solve the daily or an arbitrary Wordle
+from the *New York Times* website.
 
 The algorithm is not terribly clever or optimal. On the first guess it will
 randomly choose words with unique common consonants and up to two common

@@ -130,7 +130,7 @@ def print_stats(stats = False, guess_count = False, word_guessed = False):
         normal = "\033[0m"
     print(boldunderline + "Statistics" + normal + "\n")
     print("Played:         " + str(stats["Played"]))
-    print("Win%:           " + str(int(stats["Win %"])) + "%")
+    print("Win %:          " + str(int(stats["Win %"])) + "%")
     print("Current Streak: " + str(stats["Current Streak"]))
     print("Max Streak:     " + str(stats["Max Streak"]))
     print("\n" + boldunderline + "Guess Distribution" + normal + "\n")

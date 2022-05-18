@@ -26,6 +26,7 @@ from pathlib import Path
 import argparse
 import json
 import operator
+import pathlib
 import platform
 import random
 import re
@@ -55,16 +56,22 @@ def has_ansi():
 #    file_name_full_path: full path to file_name
 #
 def user_data_dir(file_name):
-    os_path = getenv("XDG_DATA_HOME", "~/.local/share")
-    path = Path(os_path) / "wordle_solver"
-    return path.expanduser() / file_name
+    home = pathlib.Path.home()
+    if sys.platform == "win32":
+        data_dir = home / "AppData/Roaming"
+    elif sys.platform == "linux":
+        os_path = getenv("XDG_DATA_HOME", "~/.local/share")
+        data_dir = Path(os_path).expanduser()
+    elif sys.platform == "darwin":
+        data_dir = home / "Library/Application Support"
+    return data_dir / "wordle_solver" / file_name
 #
 # end user_data_dir()
 #
 
 
 #
-# load_stats(): load statistics from ~/.local/share/wordle_solver/statistics.json
+# load_stats(): load statistics from statistics.json in user data directory
 #   if statistics.json does not exist, it is created and statistics are initialised
 #
 #   returns:
@@ -94,7 +101,7 @@ def load_stats():
 
 
 #
-# save_stats(): save statistics to ~/.local/share/wordle_solver/statistics.json
+# save_stats(): save statistics to statistics.json in user data directory
 #   stats: dictionary containing statistics
 #
 def save_stats(stats):
@@ -556,7 +563,7 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
 
 
 #
-# cache_wordle_list(): Cache downloaded Wordle words
+# cache_wordle_list(): Cache downloaded Wordle words to user data directory
 #   worldle_hash: Wordle hash to cache
 #   worldle_list: Wordle list to cache
 #
@@ -632,7 +639,7 @@ def get_wordle_hash():
 #
 
 #
-# load_wordle_list(): Load cached Wordle words
+# load_wordle_list(): Load cached Wordle words from user user data directory
 #
 #   returns:
 #       wordle_list: list of Wordle words

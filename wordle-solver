@@ -422,7 +422,7 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
 
 
     # char with feedback = "y" must be present
-    # at least as many times is "y" is present in the feedback
+    # at least as many times as "y" and "g" is present in the feedback
     filter_pattern = ""
     for i, feedback in enumerate(guess_feedback):
         if feedback == "y":
@@ -430,6 +430,9 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
                 filter_pattern += "(?=.*" + guess[i] + ".*)"
             else:
                 filter_pattern = filter_pattern.replace(guess[i], guess[i] + ".*" + guess[i], 1)
+    for i, feedback in enumerate(guess_feedback):
+        if feedback == "g" and filter_pattern.find(guess[i]) != -1:
+            filter_pattern = filter_pattern.replace(guess[i], guess[i] + ".*" + guess[i], 1)
 
     # filter word list
     if filter_pattern != "":

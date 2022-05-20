@@ -508,7 +508,11 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
 # 
 # solve_wordle(): solve a Wordle puzzle
 #   DEBUG:       print debugging information
+#   practice:    whether to update statistics or not
+#   number:      current Wordle number being solved
+#   answer:      answer to auto-solve for
 #   debug_words: seed guesses with up to 6 words
+#   word_fname:  file containing words to guess from
 #
 # returns:
 #   0: solved Wordle

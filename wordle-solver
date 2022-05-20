@@ -170,14 +170,14 @@ def print_stats(stats = False, guess_count = False, word_guessed = False):
 
 #
 # update_stats(): update statistics with guess results
+#   stats:        stats dictionary to update
 #   guess_count:  number of guesses made
 #   word_guessed: true if word was guessed
 #
-def update_stats(guess_count, word_guessed):
-    try:
-        stats = load_stats()
-    except:
-        return
+# returns:
+#   stats: updated statistics
+#
+def update_stats(stats, guess_count, word_guessed):
     stats["Played"] += 1
     if word_guessed:
         stats["Won"] += 1
@@ -188,8 +188,8 @@ def update_stats(guess_count, word_guessed):
     else:
         stats["Current Streak"] = 0
     stats["Win %"] = stats["Won"] / stats["Played"] * 100
-    save_stats(stats)
-    print_stats(stats, guess_count, word_guessed)
+
+    return stats
 #
 # end update_stats()
 #
@@ -565,6 +565,9 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
                 guess_history += "\U00002B1C" # white square
         guess_history += "\n"
 
+        # load or initialise statistics
+        stats = load_stats()
+
         # word guessed
         if word_guessed:
             print("\nGuessed word in {0} guesses: {1} ({2}!)\n".format(guess_count + 1,
@@ -575,7 +578,9 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
                 print("Wordle {0}/6*\n".format(guess_count + 1))
             print(guess_history)
             if not practice:
-                update_stats(guess_count, word_guessed)
+                update_stats(stats, guess_count, word_guessed)
+                save_stats(stats)
+                print_stats(stats, guess_count, word_guessed)
             return 0
         
         # run out of words to choose from
@@ -587,7 +592,9 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
                 print("Wordle X/6*\n")
             print(guess_history)
             if not practice:
-                update_stats(guess_count, word_guessed)
+                update_stats(stats, guess_count, word_guessed)
+                save_stats(stats)
+                print_stats(stats, guess_count, word_guessed)
             return 1
 
     # run out of guesses
@@ -598,7 +605,9 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
         print("Wordle X/6*\n")
     print(guess_history)
     if not practice:
-        update_stats(guess_count, word_guessed)
+        update_stats(stats, guess_count, word_guessed)
+        save_stats(stats)
+        print_stats(stats, guess_count, word_guessed)
     return 1
 #
 # end solve_wordle()

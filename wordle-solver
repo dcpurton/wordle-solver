@@ -420,6 +420,9 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
         print("\nDEBUG: Not present pattern: " + filter_pattern)
         print("DEBUG: Words left: " + str(len(word_list)))
 
+    if (len(word_list) == 1):
+        return word_list, guess_feedback, False
+
 
     # char with feedback = "y" must be present
     # at least as many times as "y" and "g" is present in the feedback
@@ -441,6 +444,8 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
             print("DEBUG: Must be present pattern: " + filter_pattern)
             print("DEBUG: Words left: " + str(len(word_list)))
 
+    if (len(word_list) == 1):
+        return word_list, guess_feedback, False
 
     # char with feedback = "y" and feedback = "x" must be present
     # exactly as many times as "y" is present in the feedback

@@ -474,6 +474,37 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
 #
 
 
+#
+# load_word_list(): Load word list to guess from
+#   word_fname: path to file to load words from
+#
+# returns:
+#   word_list: array of words to guess from
+#   False:     could not load word list
+#
+def load_word_list(word_fname = "/usr/share/dict/words"):
+    try:
+        with open(word_fname, "r") as word_file:
+            # read in 5 letter lowercase words from supplied word file (excluding Roman numbers)
+            word_list = []
+            for word in word_file:
+                if re.match("^(?![xvicm]{5})[a-z]{5}$", word):
+                    word_list.append(word)
+            word_file.close()
+
+            if len(word_list) == 0:
+                print("\nERROR: File '" + word_fname + "' contains no valid 5 letter words.\n")
+                return False
+
+            return word_list
+    except:
+        print("\nERROR: Could not open file '" + word_fname + "' containing known words.\n")
+        return False
+#
+# end load_word_list()
+#
+
+
 # 
 # solve_wordle(): solve a Wordle puzzle
 #   DEBUG:       print debugging information
@@ -485,21 +516,9 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
 #
 def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, debug_words = [],
         word_fname = "/usr/share/dict/words"):
-    try:
-        word_file = open(word_fname, "r")
-    except:
-        print("\nERROR: Could not open file '" + word_fname + "' containing known words.\n")
-        return 1
 
-    # read in 5 letter lowercase words from supplied word file (excluding Roman numbers)
-    word_list = []
-    for word in word_file:
-        if re.match("^(?![xvicm]{5})[a-z]{5}$", word):
-            word_list.append(word)
-    word_file.close()
-
-    if len(word_list) == 0:
-        print("\nERROR: File '" + word_fname + "' contains no valid 5 letter words.\n")
+    word_list = load_word_list(word_fname)
+    if not word_list:
         return 1
 
     banner = [ "Genius", "Magnificent", "Impressive", "Splendid", "Great", "Phew" ]

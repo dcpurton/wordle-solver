@@ -297,11 +297,12 @@ def show_guess_feedback(guess, guess_feedback):
 # get_guess_feedback(): Get guess feedback from user or supplied answer
 #   guess:  word guessed
 #   answer: optional supplied answer
+#   quiet:  don't print anything
 #
 #   returns:
 #     guess_feedback: a string of 5 characters containing the guess feedback
 #
-def get_guess_feedback(guess, answer = False):
+def get_guess_feedback(guess, answer = False, quiet = False):
     guess_feedback = ""
     if answer:
         for i, char in enumerate(guess):
@@ -323,7 +324,8 @@ def get_guess_feedback(guess, answer = False):
                     guess_feedback += "x"
                 else:
                     guess_feedback += "y"
-        show_guess_feedback(guess, guess_feedback)
+        if not quiet:
+            show_guess_feedback(guess, guess_feedback)
     else:
         guess_feedback = input("  Guess feedback: ")
     return guess_feedback
@@ -336,6 +338,7 @@ def get_guess_feedback(guess, answer = False):
 # guess_word(): guess a word and filter the word list based on feedback
 #   guess_count: current guess number (0 based)
 #   word_list:   list of words to select from and filter
+#   quiet:       don't print anything
 #   DEBUG:       print debugging information
 #   debug_words: seed guesses with up to 6 words
 #
@@ -344,7 +347,7 @@ def get_guess_feedback(guess, answer = False):
 #     guess_feedback: The feedback given for this guess
 #     word_guessed:   True if feedback is given as "ggggg"
 #
-def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_words = []):
+def guess_word(guess_count, word_list, answer = False, quiet = False, DEBUG = False, debug_words = []):
     if DEBUG:
         if guess_count == 0:
             print("DEBUG: Words in initial list: " + str(len(word_list)))
@@ -367,11 +370,12 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
         print("")
 
     # get guess feedback
-    if answer:
-        print("Guess {0}: ".format(guess_count + 1), end = "")
-    else:
-        print("Guess {0}: {1}".format(guess_count + 1, guess))
-    guess_feedback = get_guess_feedback(guess, answer)
+    if not quiet:
+        if answer:
+            print("Guess {0}: ".format(guess_count + 1), end = "")
+        else:
+            print("Guess {0}: {1}".format(guess_count + 1, guess))
+    guess_feedback = get_guess_feedback(guess, answer, quiet)
 
     # ensure valid guess feedback
     while not re.match("^[gxy]{5}$", guess_feedback):
@@ -553,7 +557,8 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
         print("    g: letter appears in the word at this location\n")
 
     for guess_count in range(6):
-        word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, answer, DEBUG, debug_words)
+        word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, answer,
+                                                             False, DEBUG, debug_words)
 
         # store guess history using emojis
         for feedback in guess_feedback[ : : 1 ]:
@@ -755,6 +760,43 @@ def get_wordle(number = -1):
 
 
 #
+# test_solver(): solve all Wordles from NYT and display statistics
+#   word_fname:   file containing words to guess from
+#
+# returns:
+#   0: success
+#   1: error occurred
+def test_solver(word_fname = "/usr/share/dict/words"):
+    full_word_list = load_word_list(word_fname)
+    if not full_word_list:
+        return 1
+
+    wordle_words = load_wordle_list()
+    if not wordle_words:
+        return 1
+
+    stats = init_stats()
+
+    print("Testing Wordle solver...\n")
+
+    for answer in wordle_words:
+        word_list = full_word_list
+        word_guessed = False
+        for guess_count in range(6):
+            word_list, guess_feedback, word_guessed = guess_word(guess_count, word_list, answer, True)
+            if word_guessed or len(word_list) == 0:
+                break
+        stats = update_stats(stats, guess_count, word_guessed)
+
+    print_stats(stats)
+
+    return 0
+#
+# end test_solver()
+#
+
+
+#
 # signal_handler(): signal handler to gracefully exit on Ctrl+C
 #   sig:   signal number (unused)
 #   frame: execution frame (unused)
@@ -786,6 +828,8 @@ if __name__ == "__main__":
             help="do not update statistics")
     parser.add_argument("-s", "--statistics", dest="stats", action='store_true',
             help="print statistics")
+    parser.add_argument("--test", dest="test", action='store_true',
+            help="solve all NYT Wordles and display statistics")
     parser.add_argument("-t", "--today", dest="today", action='store_true',
             help="auto-solve today's Wordle")
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
@@ -795,6 +839,9 @@ if __name__ == "__main__":
     parser.add_argument('guesses', metavar="guess", nargs="*",
             help="seed the solver with up to 6 guesses")
     args = parser.parse_args()
+    if args.test:
+        print()
+        sys.exit(test_solver(args.word_fname))
     if args.stats:
         print()
         print_stats()

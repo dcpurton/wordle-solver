@@ -42,6 +42,7 @@ optional arguments:
                         auto-solve specified Wordle
   -p, --practice        do not update statistics
   -s, --statistics      print statistics
+  --test                solve all NYT Wordles and display statistics
   -t, --today           auto-solve today's Wordle
   -v, --version         show program's version number and exit
   -w fname, --words fname
@@ -50,7 +51,13 @@ optional arguments:
 
 ## Example output
 
+Solver solution to Wordle 0 (cigar):
+
 ![Solution to Wordle 0](wordle-solver.png?raw=true)
+
+Solver statistics for solving all Wordle puzzles from the *New York Times*:
+
+![Wordle statistics](wordle-statistics.png?raw=true)
 
 ## Copyright
 

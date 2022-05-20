@@ -358,7 +358,6 @@ def guess_word(guess_count, word_list, answer = False, DEBUG = False, debug_word
         print("Guess {0}: ".format(guess_count + 1), end = "")
     else:
         print("Guess {0}: {1}".format(guess_count + 1, guess))
-    #guess_feedback = input("  Guess feedback: ")
     guess_feedback = get_guess_feedback(guess, answer)
 
     # ensure valid guess feedback

@@ -64,7 +64,7 @@ def user_data_dir(file_name):
         data_dir = Path(os_path).expanduser()
     elif sys.platform == "darwin":
         data_dir = home / "Library/Application Support"
-    return data_dir / "wordle_solver" / file_name
+    return data_dir / "wordle-solver" / file_name
 #
 # end user_data_dir()
 #

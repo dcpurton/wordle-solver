@@ -71,6 +71,26 @@ def user_data_dir(file_name):
 
 
 #
+# init_stats(): initialise statistics dictionary
+#
+# returns:
+#   stats: empty statistics dictionary
+def init_stats():
+    stats = {
+            "Played": 0,
+            "Win %": 0,
+            "Current Streak": 0,
+            "Max Streak": 0,
+            "Guess Distribution": [0, 0, 0, 0, 0, 0],
+            "Won": 0
+            }
+    return stats
+#
+# end init_stats()
+#
+
+
+#
 # load_stats(): load statistics from statistics.json in user data directory
 #   if statistics.json does not exist, it is created and statistics are initialised
 #
@@ -86,14 +106,7 @@ def load_stats():
     except:
         stats_path.parent.mkdir(parents=True, exist_ok=True)
         stats_path.touch(exist_ok=True)
-        stats = {
-                "Played": 0,
-                "Win %": 0,
-                "Current Streak": 0,
-                "Max Streak": 0,
-                "Guess Distribution": [0, 0, 0, 0, 0, 0],
-                "Won": 0
-                }
+        stats = init_stats()
     return stats
 #
 # end load_stats()

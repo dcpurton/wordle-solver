@@ -48,6 +48,10 @@ optional arguments:
                         file containing list of words to guess from
 ```
 
+## Example output
+
+![Solution to Wordle 0](wordle-solver.png?raw=true)
+
 ## Copyright
 
 wordle-solver 1.0

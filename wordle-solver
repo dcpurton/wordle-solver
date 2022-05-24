@@ -506,7 +506,7 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
             word_list = []
             for word in word_file:
                 if re.match("^(?![xvicm]{5})[a-z]{5}$", word):
-                    word_list.append(word)
+                    word_list.append(word.rstrip("\n"))
             word_file.close()
 
             if len(word_list) == 0:

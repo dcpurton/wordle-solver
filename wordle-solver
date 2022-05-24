@@ -434,7 +434,11 @@ def guess_word(guess_count, word_list, answer = False, quiet = False, DEBUG = Fa
     word_list = filter_word_list(filter_pattern, word_list)
     if DEBUG:
         print("\nDEBUG: Not present pattern: " + filter_pattern)
-        print("DEBUG: Words left: " + str(len(word_list)))
+        print("DEBUG: Words left: " + str(len(word_list)), end="")
+        if len(word_list) < 6:
+            print(": ", end="")
+            print(*word_list, sep=", ", end="")
+        print()
 
     if (len(word_list) == 1):
         return word_list, guess_feedback, False
@@ -458,7 +462,11 @@ def guess_word(guess_count, word_list, answer = False, quiet = False, DEBUG = Fa
         word_list = filter_word_list(filter_pattern, word_list)
         if DEBUG:
             print("DEBUG: Must be present pattern: " + filter_pattern)
-            print("DEBUG: Words left: " + str(len(word_list)))
+            print("DEBUG: Words left: " + str(len(word_list)), end="")
+            if len(word_list) < 6:
+                print(": ", end="")
+                print(*word_list, sep=", ", end="")
+            print()
 
     if (len(word_list) == 1):
         return word_list, guess_feedback, False
@@ -483,7 +491,11 @@ def guess_word(guess_count, word_list, answer = False, quiet = False, DEBUG = Fa
             word_list = filter_word_list(filter_pattern, word_list)
             if DEBUG:
                 print("DEBUG: Exactly present pattern: " + filter_pattern)
-                print("DEBUG: Words left: " + str(len(word_list)))
+                print("DEBUG: Words left: " + str(len(word_list)), end="")
+                if len(word_list) < 6:
+                    print(": ", end="")
+                    print(*word_list, sep=", ", end="")
+                print()
 
     return word_list, guess_feedback, False
 #

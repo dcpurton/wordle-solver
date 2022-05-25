@@ -689,7 +689,6 @@ def download_wordle_list(wordle_hash):
         cache_wordle_list(wordle_hash, wordle_list)
         return wordle_list
     except:
-        print("\nERROR: Could not download Wordle list\n")
         return False
 #
 # end download_wordle_list()
@@ -713,7 +712,6 @@ def get_wordle_hash():
         wordle_hash = wordle_hash.group(1)
         return wordle_hash
     except:
-        print("\nERROR: Could not get current Wordle version\n")
         return False
 #
 # end get_wordle_hash()
@@ -737,14 +735,20 @@ def load_wordle_list():
         wordle_list = wordle_data["words"]
     except:
         wordle_hash = get_wordle_hash()
+        if not wordle_hash:
+            print("\nERROR: Could not get current Wordle version\n")
+            return False
         wordle_list = download_wordle_list(wordle_hash)
+        if not wordle_list:
+            print("\nERROR: Could not download Wordle list\n")
+            return False
         return wordle_list
 
     # check for new Wordle data
     delta = date.today() - date.fromisoformat(wordle_data["date"])
     if delta.days > 0:
         wordle_hash = get_wordle_hash()
-        if wordle_hash != wordle_data["hash"]:
+        if wordle_hash and wordle_hash != wordle_data["hash"]:
             wordle_list = download_wordle_list(wordle_hash)
     return wordle_list
 #

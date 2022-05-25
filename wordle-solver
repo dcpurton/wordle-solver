@@ -559,7 +559,7 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
 #   0: solved Wordle
 #   1: could not find a solution
 #
-def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, debug_words = [],
+def solve_wordle(DEBUG = False, practice = False, number = None, answer = False, debug_words = [],
         word_fname = "/usr/share/dict/words"):
 
     word_list = load_word_list(word_fname)
@@ -601,7 +601,7 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
         if word_guessed:
             print("\nGuessed word in {0} guesses: {1} ({2}!)\n".format(guess_count + 1,
                 word_list[0], banner[guess_count]))
-            if number >= 0:
+            if number is not None:
                 print("Wordle {0} {1}/6*\n".format(number, guess_count + 1))
             else:
                 print("Wordle {0}/6*\n".format(guess_count + 1))
@@ -615,7 +615,7 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
         # run out of words to choose from
         if len(word_list) == 0:
             print("\nSorry, I don't know any more potential words.\n")
-            if number >= 0:
+            if number is not None:
                 print("Wordle {0} X/6*\n".format(number))
             else:
                 print("Wordle X/6*\n")
@@ -628,7 +628,7 @@ def solve_wordle(DEBUG = False, practice = False, number = -1, answer = False, d
 
     # run out of guesses
     print("\nCould not guess word within 6 guesses.\n")
-    if number >= 0:
+    if number is not None:
         print("Wordle {0} X/6*\n".format(number))
     else:
         print("Wordle X/6*\n")
@@ -764,22 +764,27 @@ def load_wordle_list():
 #       wordle: specified Wordle word
 #       False:  if error occurred
 #
-def get_wordle(number = -1):
+def get_wordle(number = None):
     # load Wordle list
     wordle_list = load_wordle_list()
 
     if not wordle_list:
         return False, number
 
-    if number == -1:
-        # get today's Wordle
-        delta = date.today() - date.fromisoformat("2021-06-19")
-        number = delta.days
-        while number >= len(wordle_list):
-            number -= len(wordle_list)
-    elif number < 0 or number >= len(wordle_list):
-        print("\nERROR: Requested Wordle must be between 0 and " + len(wordle_list) - 1 + "\n")
-        return False, number
+    # get today's Wordle number
+    delta = date.today() - date.fromisoformat("2021-06-19")
+    number_today = delta.days
+    while number_today >= len(wordle_list):
+        number_today -= len(wordle_list)
+
+    if number is None:
+        number = number_today
+    elif number < 0 and abs(number) <= number_today:
+        number = number_today + number
+    elif abs(number) > number_today or number >= len(wordle_list):
+        print("\nERROR: Requested Wordle must be between −" + str(number_today) +
+                " and " + str(len(wordle_list) - 1) + "\n")
+        return False, None
 
     return wordle_list[number], number
 #
@@ -851,7 +856,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", dest="debug", action="store_true",
             help="show debug information")
     parser.add_argument("-n", "--number", metavar="number", dest="number",
-            default=-1, type=int, help="auto-solve specified Wordle")
+            type=int, help="auto-solve specified Wordle (negative for previous days)")
     parser.add_argument("-p", "--practice", dest="practice", action="store_true",
             help="do not update statistics")
     parser.add_argument("-s", "--statistics", dest="stats", action="store_true",
@@ -878,7 +883,7 @@ if __name__ == "__main__":
         args.answer, args.number = get_wordle()
         if not args.answer:
             sys.exit(1)
-    elif args.number >= 0:
+    elif args.number is not None:
         args.answer, args.number = get_wordle(args.number)
         if not args.answer:
             sys.exit(1)

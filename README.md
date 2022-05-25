@@ -41,7 +41,7 @@ optional arguments:
                         auto-solve using supplied five letter word
   -d, --debug           show debug information
   -n number, --number number
-                        auto-solve specified Wordle
+                        auto-solve specified Wordle (negative for previous days)
   -p, --practice        do not update statistics
   -s, --statistics      print statistics
   --test                solve all NYT Wordles and display statistics

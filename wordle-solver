@@ -518,9 +518,12 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
             # read in 5 letter lowercase words from supplied word file (excluding Roman numbers)
             word_list = []
             for word in word_file:
-                if re.match("^(?![xvicm]{5})[a-z]{5}$", word):
+                if re.match("^(?![cilmvx]{5})[a-z]{5}$", word):
                     word_list.append(word.rstrip("\n"))
             word_file.close()
+
+            # These valid words were excluded as Roman numbers
+            word_list.extend(["civic", "civil", "mimic"])
 
             if len(word_list) == 0:
                 print("\nERROR: File '" + word_fname + "' contains no valid 5 letter words.\n")
@@ -532,8 +535,8 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
                 for wordle in wordle_list:
                     if not wordle in word_list:
                         word_list.append(wordle)
-                wordle_list.sort()
 
+            wordle_list.sort()
             return word_list
     except:
         print("\nERROR: Could not open file '" + word_fname + "' containing known words.\n")

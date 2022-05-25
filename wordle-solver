@@ -701,7 +701,7 @@ def download_wordle_list(wordle_hash):
 #
 #   returns:
 #       wordle_hash: current Wordle hash
-#       False:       if an error occurrs
+#       False:       if an error occurs
 #
 def get_wordle_hash():
     try:

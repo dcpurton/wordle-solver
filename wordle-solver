@@ -526,6 +526,14 @@ def load_word_list(word_fname = "/usr/share/dict/words"):
                 print("\nERROR: File '" + word_fname + "' contains no valid 5 letter words.\n")
                 return False
 
+            # ensure all Wordle words are known
+            wordle_list = load_wordle_list()
+            if wordle_list:
+                for wordle in wordle_list:
+                    if not wordle in word_list:
+                        word_list.append(wordle)
+                wordle_list.sort()
+
             return word_list
     except:
         print("\nERROR: Could not open file '" + word_fname + "' containing known words.\n")

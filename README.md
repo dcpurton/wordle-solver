@@ -6,7 +6,9 @@ A simple Wordle solver.
 
 `wordle-solver` sources five letter words from `/usr/share/dict/words` (or
 another specified file containing one word per line) and attempts to solve a
-[Wordle](https://www.nytimes.com/games/wordle/index.html) puzzle.
+[Wordle](https://www.nytimes.com/games/wordle/index.html) puzzle. Known words
+are supplemented from the official *Wordle* words if they are not found in the
+default or supplied list.
 
 The user must give feedback indicating whether each letter guessed does not
 appear in the word, does appear, but at a different location, or appears at

@@ -57,7 +57,9 @@ Solver solution to Wordle 0 (cigar):
 
 ![Solution to Wordle 0](wordle-solver.png?raw=true)
 
-Solver statistics for solving all Wordle puzzles from the *New York Times*:
+Indicative solver statistics for solving all Wordle puzzles from the *New York
+Times* using standard sized word list from
+[SCOWL](http://wordlist.aspell.net/dicts/):
 
 ![Wordle statistics](wordle-statistics.png?raw=true)
 

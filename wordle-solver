@@ -473,21 +473,27 @@ def guess_word(guess_count, word_list, answer = None, quiet = False, DEBUG = Fal
         return word_list, guess_feedback, False
 
     # char with feedback = "y" and feedback = "x" must be present
-    # exactly as many times as "y" is present in the feedback
+    # exactly as many times as "y" and "g" is present in the feedback
     char_counts = {}
     # create dictionary counting "y" and "x" feedback for each letter in guess
     for i, feedback in enumerate(guess_feedback):
-        char_counts[guess[i]] = list(map(operator.add, char_counts.get(guess[i], [0, 0]),
-                [ int(feedback == "y"), int(feedback == "x") ]))
+        char_counts[guess[i]] = list(map(operator.add, char_counts.get(guess[i], [0, 0, 0]),
+                [ int(feedback == "g"), int(feedback == "y"), int(feedback == "x") ]))
     for i, char in enumerate(char_counts):
         # if letter in guess has both "y" and "x" construct pattern to match words
         # containing char the number of times "y" appears in the guess
-        if char_counts[char][0] > 0 and char_counts[char][1] > 0:
+        if char_counts[char][1] > 0 and char_counts[char][2] > 0:
             filter_pattern = "^[^" + char + "]*"
-            for j in range(char_counts[char][0]):
+            # pattern for "y" feedback
+            for j in range(char_counts[char][1]):
                 if j > 0:
                     filter_pattern += ".*?"
                 filter_pattern += "[" + char + "]"
+            # pattern for "g" feedback
+            if char_counts[char][0] > 0 and char_counts[char][1] > 0:
+                for j in range(char_counts[char][0]):
+                    filter_pattern += ".*?"
+                    filter_pattern += "[" + char + "]"
             filter_pattern += "[^" + char + "]*$"
             word_list = filter_word_list(filter_pattern, word_list)
             if DEBUG:
